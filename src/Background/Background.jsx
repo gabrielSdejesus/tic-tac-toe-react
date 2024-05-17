@@ -1,46 +1,69 @@
-import React, {useState} from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-function Background(){
+function Background() {
 
-    const [playerTurn, setPlayerTurn] = useState("X");
-    const [board, setBoard] = useState([]);
+    let playerTurn = useRef("X");
+    const divPlayer = useRef();
+    const divWin = useRef();
 
-    function selectElement(idElementCell){
+    const [board, setBoard] = useState(Array(9).fill(null));
 
-        if(board[idElementCell] === undefined) {
-            let newBoard = board;
-            newBoard[idElementCell] = playerTurn;
+    console.log("renderizou");
+
+    function selectElement(idElementCell) {
+        if (board[idElementCell] === null) {
+            const newBoard = [...board];
+            newBoard[idElementCell] = playerTurn.current;
             setBoard(newBoard);
-
-            document.getElementById(idElementCell).innerText = playerTurn;
-            setPlayerTurn(playerTurn == "X" ? "0" : "X");
+            checkWin(newBoard);
         }
     }
 
-    function resetGame(){
-        setBoard([]);
-        document.querySelectorAll('.cell').forEach(cell =>{
-            cell.innerText = "";
-        });
+    function resetGame() {
+        setBoard(Array(9).fill(null));
+        playerTurn = "X";
+        divWin.current.style.display = "none";
+        divPlayer.current.style.display = "block";
     }
 
-    return(
+    function checkWin(board) {
+        const combinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Horizontal
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Vertical
+            [0, 4, 8], [2, 4, 6]              // Diagonal
+        ];
+
+        for (let combination of combinations) {
+            const [a, b, c] = combination;
+            if (board[a] === playerTurn.current && board[b] === playerTurn.current && board[c] === playerTurn.current) {
+                divWin.current.style.display = "block";
+                divPlayer.current.style.display = "none";
+                return;
+            }
+        }
+
+        playerTurn.current === "X" ? playerTurn.current = "O" : playerTurn.current = "X";
+    }
+
+    return (
         <div className="game">
-        <div className="status">Next player: {playerTurn}</div>
-        <div className="board">
-            <div onClick={() => selectElement(0)} className="cell" id="0"></div>
-            <div onClick={() => selectElement(1)} className="cell" id="1"></div>
-            <div onClick={() => selectElement(2)} className="cell" id="2"></div>
-            <div onClick={() => selectElement(3)} className="cell" id="3"></div>
-            <div onClick={() => selectElement(4)} className="cell" id="4"></div>
-            <div onClick={() => selectElement(5)} className="cell" id="5"></div>
-            <div onClick={() => selectElement(6)} className="cell" id="6"></div>
-            <div onClick={() => selectElement(7)} className="cell" id="7"></div>
-            <div onClick={() => selectElement(8)} className="cell" id="8"></div>
+            <div ref={divWin} className="status" style={{ display: 'none' }}>Player Win: {playerTurn.current}</div>
+            <div ref={divPlayer} className="status">Next player: {playerTurn.current}</div>
+            <div className="board">
+                {board.map((value, index) => (
+                    <div
+                        key={index}
+                        onClick={() => selectElement(index)}
+                        className="cell"
+                        id={index.toString()}
+                    >
+                        {value}
+                    </div>
+                ))}
+            </div>
+            <button onClick={resetGame} className="reset">Reset Game</button>
         </div>
-        <button onClick={resetGame} className="reset">Reset Game</button>
-    </div>
-    )
+    );
 }
 
 export default Background;
